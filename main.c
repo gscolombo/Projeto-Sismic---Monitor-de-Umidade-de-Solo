@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 
+#define DRY 0
+#define DAMP 1800
+
 typedef enum state { IDLE, WORK, LCD_ERROR } state;
 
 static state mode = IDLE;
@@ -17,29 +20,32 @@ void setup() {
   if (!setupLCD())
     mode = LCD_ERROR;
 
-  // __enable_interrupt(); // Habilita GIE
+  __enable_interrupt(); // Habilita GIE
 }
 
 void main() {
   setup();
-  static char buffer[32];
+  static char uart_buffer[32], lcd_buffer[80];
   volatile unsigned long humidity, humidity_perc;
   volatile unsigned int integer, decimal;
   int error_msg_printed = 0;
 
-  LCDWrite("Hello World!\nI'm ready.");
-
   for (;;)
     switch (mode) {
     case WORK:
-      humidity = ((long)(4095 - analog_read_value) + 1) * 1000;
+      humidity = ((unsigned long)(4095 - analog_read_value) + 1) * 1000;
       humidity_perc = humidity >> 12; // Divide por 4096
       integer = humidity_perc / 10;
       decimal = humidity_perc % 10;
 
-      sprintf(buffer, "ADC: %d | Umidade: %d.%d%%", analog_read_value, integer,
+      sprintf(uart_buffer, "ADC: %d | Umidade: %d.%d%%", analog_read_value, integer,
               decimal);
-      serialPrintLn(buffer);
+      sprintf(lcd_buffer, "Umidade: %d.%d%%", integer, decimal);
+
+      serialPrintLn(uart_buffer);
+
+      clearLCD();
+      LCDWrite(lcd_buffer);
       mode = IDLE;
     case IDLE:
       __low_power_mode_1();
