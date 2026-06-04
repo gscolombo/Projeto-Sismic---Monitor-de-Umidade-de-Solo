@@ -72,7 +72,7 @@ uint8_t LCDWriteByte(uint8_t byte, uint8_t isChar) {
 }
 
 uint8_t LCDReadNibble(uint8_t *buf, uint8_t isChar) {
-  uint8_t ack = 0, data = 0xF0 | LCD_RW | isChar;
+  uint8_t ack = 0, data = 0xF0 | LCD_BL | LCD_RW | isChar;
 
   ack = i2cSend(LCD_I2C_ADDR, data);
   if (ack)
@@ -122,7 +122,7 @@ uint8_t LCDWrite(char *str) {
   return ack;
 }
 
-inline uint8_t LCDBusy() {
+uint8_t LCDBusy() {
   uint8_t bf = 0;
   LCDReadByte(&bf, 0);
 
@@ -130,4 +130,10 @@ inline uint8_t LCDBusy() {
   bf >>= 7;
 
   return bf;
+}
+
+void clearLCD() {
+  LCDWriteByte(0x01, 0);
+  while (LCDBusy())
+    ;
 }
