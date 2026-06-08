@@ -8,7 +8,7 @@ void setupUART() {
   UCA1CTL1 |= UCSWRST;
   UCA1CTL1 |= UCSSEL__ACLK; // Uso de ACLK para BRCLK
 
-  // Baud rate de 9600 com clock de 32.768MHz
+  // Baud rate de 9600 com clock de 32.768Hz
   UCA1BR0 = 3;
   UCA1BR1 = 0;
   UCA1MCTL = 0x06;
