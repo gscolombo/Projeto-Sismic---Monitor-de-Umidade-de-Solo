@@ -9,5 +9,5 @@ void parseRead(char *buf) {
   unsigned int i = (humidity_perc * DEN) >> 16;
   unsigned int d = humidity_perc - 10 * i;
 
-  sprintf(buf, "Umidade: %d.%d%%", i, d);
+  sprintf(buf, "%d.%d%%   ", i, d);
 }

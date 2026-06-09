@@ -23,7 +23,7 @@ uint8_t LCDReadNibble(uint8_t *, uint8_t);
 uint8_t LCDReadByte(uint8_t *, uint8_t);
 uint8_t LCDBusy();
 
-uint8_t LCDWrite(char *);
+uint8_t LCDWrite(char *, uint8_t);
 
 void clearLCD();
 

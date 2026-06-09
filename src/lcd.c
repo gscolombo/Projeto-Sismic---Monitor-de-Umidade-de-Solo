@@ -105,10 +105,13 @@ uint8_t LCDReadByte(uint8_t *byte, uint8_t isChar) {
   return ack;
 }
 
-uint8_t LCDWrite(char *str) {
+uint8_t LCDWrite(char *str, uint8_t pos) {
   uint8_t ack = 1;
   char *c = str;
   static uint8_t ln = 0x00;
+
+  // Posiciona o cursor
+  LCDWriteByte(0x80 | (pos & 0x7F), 0);
 
   while (ack && *c != 0x00 && !LCDBusy()) {
     if (*c == '\n') {

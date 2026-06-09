@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 
-typedef enum state { IDLE, WORK, LCD_ERROR } state;
+typedef enum State { IDLE, WORK, LCD_ERROR } State;
 
-static state mode = IDLE;
+static State state = IDLE;
 
 void setup() {
   WDTCTL = WDTPW | WDTHOLD; // Para watchdog timer
@@ -16,26 +16,37 @@ void setup() {
   setupUART();
 
   if (!setupLCD())
-    mode = LCD_ERROR;
+    state = LCD_ERROR;
 
   __enable_interrupt(); // Habilita GIE
 }
 
 void main() {
   setup();
-  static char read_buffer[32], debug_buffer[32];
+  static char read_buffer[32];
   int error_msg_printed = 0;
+  
+  State prev_state = IDLE;
 
   for (;;)
-    switch (mode) {
+    switch (state) {
     case WORK:
-      parseRead(read_buffer);
-      sprintf(debug_buffer, "ADC: %d", analog_read_value);
+      if (prev_state != state) {
+        clearLCD();
+        LCDWrite("Umidade: ", 0x00);
+      }
 
-      serialPrintLn(debug_buffer);
-      clearLCD();
-      LCDWrite(read_buffer);
-      mode = IDLE;
+      parseRead(read_buffer);
+
+      // Para impressão de leituras no monitor serial
+      // char debug_buffer[32];
+      // sprintf(debug_buffer, "ADC: %d", analog_read_value);
+      // serialPrintLn(debug_buffer);
+
+      LCDWrite(read_buffer, 0x09);
+      state = IDLE;
+      prev_state = WORK;
+      break;
     case IDLE:
       __low_power_mode_1();
       break;
@@ -52,10 +63,9 @@ void main() {
 
 #pragma vector = TIMER0_A1_VECTOR
 __interrupt void checkRead() {
-
   switch (TA0IV) {
   case TA0IV_TA0IFG:
-    mode = WORK;
+    state = WORK;
     __low_power_mode_off_on_exit();
     break;
   default:
