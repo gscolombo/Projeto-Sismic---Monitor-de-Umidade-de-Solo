@@ -26,5 +26,6 @@ uint8_t LCDBusy();
 uint8_t LCDWrite(char *, uint8_t);
 
 void clearLCD();
+void clearLine(int);
 
 #endif

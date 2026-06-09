@@ -1,13 +1,22 @@
 #include <adc.h>
-#include <uart.h>
+#include <config.h>
 #include <lcd.h>
 #include <sensor.h>
+#include <uart.h>
 
 #include <stdio.h>
 
-typedef enum State { IDLE, WORK, LCD_ERROR } State;
+#define DEBUG 1
+
+typedef enum State { IDLE, WORK, CONFIG, LCD_ERROR } State;
 
 static State state = IDLE;
+
+void printRead() {
+  char debug_buffer[32];
+  sprintf(debug_buffer, "ADC: %d", analog_read_value);
+  serialPrintLn(debug_buffer);
+}
 
 void setup() {
   WDTCTL = WDTPW | WDTHOLD; // Para watchdog timer
@@ -23,9 +32,10 @@ void setup() {
 
 void main() {
   setup();
-  static char read_buffer[32];
+  static char lcd_buffer[80];
   int error_msg_printed = 0;
-  
+  Percent p;
+
   State prev_state = IDLE;
 
   for (;;)
@@ -36,16 +46,29 @@ void main() {
         LCDWrite("Umidade: ", 0x00);
       }
 
-      parseRead(read_buffer);
+      p = convertRead();
+      sprintf(lcd_buffer, "%d.%d%%   ", p.i, p.d);
 
-      // Para impressão de leituras no monitor serial
-      // char debug_buffer[32];
-      // sprintf(debug_buffer, "ADC: %d", analog_read_value);
-      // serialPrintLn(debug_buffer);
+      if (DEBUG)
+        printRead();
 
-      LCDWrite(read_buffer, 0x09);
+      LCDWrite(lcd_buffer, 0x09);
+      checkThreshold(&p, threshold);
+
       state = IDLE;
       prev_state = WORK;
+      break;
+    case CONFIG:
+
+      if (prev_state != state) {
+        // Pausa leitura de sensor
+
+        // Exibe conteúdo inicial (configuração de limite de umidade)
+        clearLCD();
+        LCDWrite("Config.", 0x00);
+        LCDWrite("Nível mínimo: ", 0x40);
+      }
+
       break;
     case IDLE:
       __low_power_mode_1();
@@ -65,8 +88,14 @@ void main() {
 __interrupt void checkRead() {
   switch (TA0IV) {
   case TA0IV_TA0IFG:
-    state = WORK;
-    __low_power_mode_off_on_exit();
+    if (state == IDLE) {
+      state = WORK;
+      __low_power_mode_off_on_exit();
+    }
+
+    if (state == CONFIG) {
+    }
+
     break;
   default:
     break;

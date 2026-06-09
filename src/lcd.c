@@ -140,3 +140,10 @@ void clearLCD() {
   while (LCDBusy())
     ;
 }
+
+void clearLine(int n) {
+  if (n)
+    LCDWrite("                ", 0x40); // 16 caracteres de espaço
+  else
+    LCDWrite("                ", 0x00); // 16 caracteres de espaço
+}
