@@ -1,11 +1,9 @@
 #include <adc.h>
 #include <uart.h>
 #include <lcd.h>
+#include <sensor.h>
 
 #include <stdio.h>
-
-#define DRY 0
-#define DAMP 1800
 
 typedef enum state { IDLE, WORK, LCD_ERROR } state;
 
@@ -25,27 +23,18 @@ void setup() {
 
 void main() {
   setup();
-  static char uart_buffer[32], lcd_buffer[80];
-  volatile unsigned long humidity, humidity_perc;
-  volatile unsigned int integer, decimal;
+  static char read_buffer[32], debug_buffer[32];
   int error_msg_printed = 0;
 
   for (;;)
     switch (mode) {
     case WORK:
-      humidity = ((unsigned long)(4095 - analog_read_value) + 1) * 1000;
-      humidity_perc = humidity >> 12; // Divide por 4096
-      integer = humidity_perc / 10;
-      decimal = humidity_perc % 10;
+      parseRead(read_buffer);
+      sprintf(debug_buffer, "ADC: %d", analog_read_value);
 
-      sprintf(uart_buffer, "ADC: %d | Umidade: %d.%d%%", analog_read_value, integer,
-              decimal);
-      sprintf(lcd_buffer, "Umidade: %d.%d%%", integer, decimal);
-
-      serialPrintLn(uart_buffer);
-
+      serialPrintLn(debug_buffer);
       clearLCD();
-      LCDWrite(lcd_buffer);
+      LCDWrite(read_buffer);
       mode = IDLE;
     case IDLE:
       __low_power_mode_1();
