@@ -8,8 +8,8 @@
 #include <string.h>
 
 #define DEN 6554
-#define WET 2500
-#define DRY 4080
+#define WET 1200
+#define DRY 4000
 
 typedef struct Percent {
   unsigned int i;

@@ -88,6 +88,8 @@ void main() {
 __interrupt void checkRead() {
   switch (TA0IV) {
   case TA0IV_TA0IFG:
+    P6OUT |= BIT5;
+
     if (state == IDLE) {
       state = WORK;
       __low_power_mode_off_on_exit();
