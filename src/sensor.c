@@ -2,11 +2,14 @@
 
 Percent convertRead() {
   Percent p;
+  if (value > DRY)
+    value = DRY;
+  if (value < WET)
+    value = WET;
 
-  unsigned long humidity =
-      ((unsigned long)(4095 - analog_read_value) + 1) * 1000;
+  unsigned long humidity = ((unsigned long)(DRY - value)) * 1000;
 
-  unsigned long humidity_perc = humidity >> 12; // Divide por 4096
+  unsigned long humidity_perc = humidity / (DRY - WET);
 
   p.i = (humidity_perc * DEN) >> 16;
   p.d = humidity_perc - 10 * p.i;

@@ -14,7 +14,7 @@ static State state = IDLE;
 
 void printRead() {
   char debug_buffer[32];
-  sprintf(debug_buffer, "ADC: %d", analog_read_value);
+  sprintf(debug_buffer, "ADC: %d", value);
   serialPrintLn(debug_buffer);
 }
 

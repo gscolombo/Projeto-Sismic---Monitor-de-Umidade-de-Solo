@@ -1,46 +1,43 @@
 #include <adc.h>
 
-volatile unsigned int analog_read_value;
+volatile unsigned int value;
 
-void setupADC12(unsigned int channel) {
-  if (channel > 7)
-    return;
+void setupADC12() {
+  // Configura pino P6.0 para entrada analógica
+  P6SEL |= BIT0;
 
-  // Configura pino P6.x para entrada analógica
-  unsigned int pin = 1 << channel;
+  ADC12CTL0 &= ~ADC12ENC;
 
-  P6SEL |= pin;
-  P6DIR &= ~pin;
+  ADC12CTL0 |=
+      ADC12ON | ADC12SHT0_4; // Liga o ADC | 64 ciclos de ADC12CLK (SMCLK)
 
-  // Configura o ADC12_A (conversor analógico-digital)
-  ADC12CTL0 = ADC12SHT0_2; // 16 ciclos de clock para amostragem
-
-  // Modo de amostragem de pulso | Uso de ACLK para clock de amostragem
-  ADC12CTL1 = ADC12SHP | ADC12SSEL_1; // ≈ 16 amostras a cada 0,5ms
+  ADC12CTL1 = ADC12SSEL_2     // SMCLK
+              | ADC12SHP      // Amostragem por pulso
+              | ADC12CONSEQ_2 // Modo repeat-single-channel
+              | ADC12SHS_1;   // Trigger por TimerA0.1
 
   ADC12CTL2 = ADC12RES_2; // Resolução de 12 bits
 
   // Seleção de canal para resultados de conversão
-  ADC12MCTL0 = channel;
+  ADC12MCTL0 = ADC12INCH_0;
+  ADC12IE = ADC12IE0; // Habilita interrupção no canal 0
 
-  // Configura Timer_A0 para leitura periódica de entrada analógica
+  // Configura Timer_A0 para conversão periódica
   TA0CTL = TASSEL__ACLK | MC__UP | TAIE | TACLR;
-  TA0CCTL0 = CCIE;
+  TA0CCTL1 = OUTMOD_2; // Toggle/Reset
   TA0CCR0 = 32768 - 1; // Período de 1s
+  TA0CCR1 = 16384 - 1;
+
+  ADC12CTL0 |= ADC12ENC; // Habilita a conversão
 }
 
-void analogRead(volatile unsigned int *result) {
-  ADC12IFG &= ~ADC12IFG0;        // Limpa flag de leitura anterior (por garantia)
-  ADC12CTL0 |= ADC12ON; // Liga o conversor
-  ADC12CTL0 |= ADC12ENC | ADC12SC; // Habilita o conversor | Inicia a conversão
-
-  // Aguarda por amostragem e conversão
-  while (!ADC12IFG0)
-    ;
-  *result = ADC12MEM0;
-
-  ADC12CTL0 &= ~ADC12ON; // Desliga o conversor
+#pragma vector = ADC12_VECTOR
+__interrupt void read() {
+  switch (ADC12IV) {
+  case ADC12IV_ADC12IFG0:
+    value = ADC12MEM0;
+    break;
+  default:
+    break;
+  }
 }
-
-#pragma vector = TIMER0_A0_VECTOR
-__interrupt void read() { analogRead(&analog_read_value); }

@@ -3,9 +3,8 @@
 
 #include <msp430.h>
 
-extern volatile unsigned int analog_read_value;
+extern volatile unsigned int value;
 
-void setupADC12(unsigned int);
-void analogRead(volatile unsigned int *);
+void setupADC12();
 
 #endif
