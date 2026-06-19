@@ -1,5 +1,5 @@
 #include <adc.h>
-#include <config.h>
+#include <fsm.h>
 #include <lcd.h>
 #include <sensor.h>
 #include <uart.h>
@@ -7,10 +7,6 @@
 #include <stdio.h>
 
 #define DEBUG 1
-
-typedef enum State { IDLE, WORK, CONFIG, LCD_ERROR } State;
-
-static State state = IDLE;
 
 void printRead() {
   char debug_buffer[32];
@@ -26,24 +22,38 @@ void setup() {
 
   if (!setupLCD())
     state = LCD_ERROR;
+  else
+    clearLCD();
+
+  // Configura pinos P2.1 (S1) and P1.1 (S2) para configuração do sistema
+  setupSwitches();
 
   __enable_interrupt(); // Habilita GIE
 }
 
 void main() {
   setup();
+
   static char lcd_buffer[80];
   int error_msg_printed = 0;
   Percent p;
-
-  State prev_state = IDLE;
+  static uint8_t setup_mode = 1;
 
   for (;;)
     switch (state) {
     case WORK:
-      if (prev_state != state) {
+      if (prev_state == START) {
+        clearLCD();
+        LCDWrite("Iniciando...", 0x00);
+        state = IDLE;
+        prev_state = WORK;
+        break;
+      }
+
+      if (setup_mode) {
         clearLCD();
         LCDWrite("Umidade: ", 0x00);
+        setup_mode = 0;
       }
 
       p = convertRead();
@@ -61,16 +71,26 @@ void main() {
     case CONFIG:
 
       if (prev_state != state) {
-        // Pausa leitura de sensor
-
         // Exibe conteúdo inicial (configuração de limite de umidade)
         clearLCD();
-        LCDWrite("Config.", 0x00);
-        LCDWrite("Nível mínimo: ", 0x40);
+        LCDWrite("Nível mínimo", 0x00);
+        LCDWrite("Umidade: ", 0x40);
+        P6OUT &= ~BIT5;
+        setup_mode = 1;
       }
 
+      sprintf(lcd_buffer, "%d.0%%   ", threshold);
+      LCDWrite(lcd_buffer, 0x49);
+      prev_state = CONFIG;
       break;
     case IDLE:
+      if (prev_state == CONFIG) {
+        clearLCD();
+        LCDWrite("Reiniciando...", 0x00);
+        TA0CTL &= ~TAIFG;
+        TA0CTL |= TAIE | TACLR;
+      }
+
       __low_power_mode_1();
       break;
     case LCD_ERROR:
@@ -82,24 +102,4 @@ void main() {
     default:
       break;
     }
-}
-
-#pragma vector = TIMER0_A1_VECTOR
-__interrupt void checkRead() {
-  switch (TA0IV) {
-  case TA0IV_TA0IFG:
-    P6OUT |= BIT5;
-
-    if (state == IDLE) {
-      state = WORK;
-      __low_power_mode_off_on_exit();
-    }
-
-    if (state == CONFIG) {
-    }
-
-    break;
-  default:
-    break;
-  }
 }
