@@ -113,13 +113,14 @@ uint8_t LCDWrite(char *str, uint8_t pos) {
   // Posiciona o cursor
   LCDWriteByte(0x80 | (pos & 0x7F), 0);
 
-  while (ack && *c != 0x00 && !LCDBusy()) {
+  while (ack && *c != 0x00) {
     if (*c == '\n') {
       ln ^= 0x40; // Alterna entre linhas a cada quebra de linha
       ack = LCDWriteByte(0x80 | ln, 0);
       c++;
     } else
       ack = LCDWriteByte(*c++, 1);
+    __delay_cycles(50);
   }
 
   return ack;
@@ -137,8 +138,7 @@ uint8_t LCDBusy() {
 
 void clearLCD() {
   LCDWriteByte(0x01, 0);
-  while (LCDBusy())
-    ;
+  __delay_cycles(20000);
 }
 
 void clearLine(int n) {
