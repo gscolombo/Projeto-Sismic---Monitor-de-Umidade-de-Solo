@@ -12,6 +12,8 @@
 #include <lcd.h>
 #include <sensor.h>
 #include <uart.h>
+#include <led.h>
+#include <buzzer.h>
 
 #include <stdio.h>
 
@@ -50,6 +52,8 @@ void setup() {
 
   // Configura pinos P2.1 (S1) and P1.1 (S2) para configuração do sistema
   setupSwitches();
+  setupLED();
+  setupBuzzer();
 
   __enable_interrupt(); // Habilita GIE
 }

@@ -8,6 +8,7 @@
  */
 
 #include <fsm.h>
+#include <buzzer.h>
 
 /**
  * Estado atual e estado anterior da máquina de estados principal (ver
@@ -155,7 +156,7 @@ __interrupt void s2() {
       switch (state) {
       case WORK:
       case IDLE:
-        // Desliga alarme
+        buzzerOff(); // Desliga alarme
         break;
       case CONFIG:
         threshold = threshold == 60 ? 5 : threshold + 5;
