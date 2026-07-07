@@ -8,12 +8,12 @@
  */
 
 #include <adc.h>
+#include <buzzer.h>
 #include <fsm.h>
 #include <lcd.h>
+#include <led.h>
 #include <sensor.h>
 #include <uart.h>
-#include <led.h>
-#include <buzzer.h>
 
 #include <stdio.h>
 
@@ -80,10 +80,11 @@ void main() {
   static char lcd_buffer[80];
   int error_msg_printed = 0;
   Percent p;
-  static uint8_t setup_mode =
-      1; // controla a impressão única do rótulo "Umidade:" no LCD
 
-  for (;;)
+  // controla a impressão única do rótulo "Umidade:" no LCD
+  static uint8_t setup_mode = 1;
+
+   for (;;)
     switch (state) {
     case WORK:
       // Primeira transição START -> WORK: apenas exibe a mensagem de

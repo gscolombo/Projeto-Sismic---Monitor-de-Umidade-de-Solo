@@ -7,8 +7,8 @@
  * sincroniza a FSM com o ciclo periódico de leitura do ADC.
  */
 
-#include <fsm.h>
 #include <buzzer.h>
+#include <fsm.h>
 
 /**
  * Estado atual e estado anterior da máquina de estados principal (ver
@@ -26,6 +26,13 @@ uint16_t threshold = 50;
  * em andamento.
  */
 uint8_t s1Pressed = 0, s2Pressed = 0;
+
+/**
+ * Flag de desligamento manual do buffer.
+ * É reiniciado quando o nível de umidade retorna para
+ * acima do limiar configurado.
+ */
+uint8_t buzzerStop = 0;
 
 /**
  * Configura os botões S1 (P2.1) e S2 (P1.1) como entradas com
@@ -157,6 +164,7 @@ __interrupt void s2() {
       case WORK:
       case IDLE:
         buzzerOff(); // Desliga alarme
+        buzzerStop = 1;
         break;
       case CONFIG:
         threshold = threshold == 60 ? 5 : threshold + 5;

@@ -24,6 +24,9 @@ extern State state, prev_state;
 /** Limiar de alarme de umidade (%), configurável pelo usuário em CONFIG. */
 extern uint16_t threshold;
 
+/** Flag de desligamento manual de alarme */
+extern uint8_t buzzerStop;
+
 /** Configura os botões S1 (P2.1) e S2 (P1.1) e o Timer_A1 de debounce. */
 void setupSwitches();
 

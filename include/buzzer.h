@@ -9,7 +9,7 @@
 #define BUZZER_PIN BIT5
 
 void setupBuzzer(void);
-void buzzerOn(void);
-void buzzerOff(void);
+inline void buzzerOn(void);
+inline void buzzerOff(void);
 
 #endif

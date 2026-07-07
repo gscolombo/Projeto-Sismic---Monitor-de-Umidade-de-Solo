@@ -6,7 +6,7 @@
 // Definição dos pinos do LED RGB na Porta 1
 #define LED_DIR P1DIR
 #define LED_OUT P1OUT
-#define LED_RED_PIN BIT2
+#define LED_RED_PIN BIT6
 #define LED_GREEN_PIN BIT3
 #define LED_BLUE_PIN BIT4
 

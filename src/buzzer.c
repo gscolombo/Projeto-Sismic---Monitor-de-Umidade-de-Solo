@@ -11,13 +11,13 @@ void setupBuzzer(void) {
 /**
  * Ativa o alarme sonoro (nível lógico alto).
  */
-void buzzerOn(void) {
+inline void buzzerOn(void) {
     BUZZER_OUT |= BUZZER_PIN;
 }
 
 /**
  * Desativa o alarme sonoro (nível lógico baixo).
  */
-void buzzerOff(void) {
+inline void buzzerOff(void) {
     BUZZER_OUT &= ~BUZZER_PIN;
 }

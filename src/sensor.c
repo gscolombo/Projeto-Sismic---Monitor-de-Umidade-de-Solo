@@ -6,9 +6,10 @@
  * TODO:
  */
 
-#include <sensor.h>
-#include <led.h>     
 #include <buzzer.h>
+#include <led.h>
+#include <sensor.h>
+#include <fsm.h>
 
 /**
  * Converte a última leitura bruta do ADC (`value`, em [0, 4095]) em um
@@ -61,6 +62,7 @@ Percent convertRead() {
  */
 void checkThreshold(Percent *p, unsigned int t) {
   static char *alert_message = "Alerta!";
+  static uint8_t buzzer_on = 0;
 
   // TODO: Considerar média/mediana móvel de percentual de umidade para disparo
   // de alarme
@@ -73,19 +75,24 @@ void checkThreshold(Percent *p, unsigned int t) {
       alert_message = "Baixa umidade!";
     else
       alert_message = "Alerta!";
-    setLEDColor(LED_RED);  // Acende o LED em Vermelho
-    buzzerOn();            // Ativa o alarme sonoro do Buzzer
+    setLEDColor(LED_RED); // Acende o LED em Vermelho
+    if (buzzer_on && !buzzerStop)
+      buzzerOn(); // Ativa o alarme sonoro do Buzzer
+    else
+      buzzerOff();
+
+    buzzer_on ^= 1;
   } else {
-      clearLine(1); // Umidade OK: garante que a linha de alerta fique limpa
-      buzzerOff(); // Garante que o Buzzer permaneça desligado fora do estado crítico
+    clearLine(1);   // Umidade OK: garante que a linha de alerta fique limpa
+    buzzerOff();    // Garante que o Buzzer permaneça desligado fora do estado
+                    // crítico
+    buzzerStop = 0; // Reseta a flag de desligamento manual do alarme
 
-      // Verifica se a umidade está na faixa de saturação (ex: >= 85%)
-      if (p->i >= 85) {
-        setLEDColor(LED_BLUE);  // Acende o LED em Azul (Saturado)
-      } else {
-        setLEDColor(LED_GREEN); // Acende o LED em Verde (Ideal)
-      }
+    // Verifica se a umidade está na faixa de saturação (ex: >= 85%)
+    if (p->i >= 85) {
+      setLEDColor(LED_BLUE); // Acende o LED em Azul (Saturado)
+    } else {
+      setLEDColor(LED_GREEN); // Acende o LED em Verde (Ideal)
+    }
   }
-    
-
 }
